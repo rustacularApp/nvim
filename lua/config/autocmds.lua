@@ -15,3 +15,14 @@ vim.api.nvim_create_autocmd(
 	{ "FocusGained", "BufEnter", "CursorHold" },
 	{ command = "checktime" }
 )
+
+
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "dart",
+	callback = function()
+		vim.opt_local.tabstop = 4      -- Render actual tabs as 4 spaces
+		vim.opt_local.shiftwidth = 4   -- Use 4 spaces for auto-indentation
+		vim.opt_local.softtabstop = 4
+		vim.opt_local.expandtab = true  -- Pressing Tab inserts spaces
+	end,
+})
