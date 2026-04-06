@@ -3,6 +3,7 @@ return {
 		"nvim-flutter/flutter-tools.nvim",
 		lazy = false,
 		dependencies = {
+			"mfussenegger/nvim-dap",
 			"nvim-lua/plenary.nvim",
 			"saghen/blink.cmp", -- Ensure blink is a dependency
 		},
@@ -33,6 +34,9 @@ return {
 						-- Recommended: Enable closing labels (those grey comments at the end of widgets)
 						closingLabels = true,
 					},
+				},
+				debugger = {
+					enabled = true
 				},
 			})
 		end,
