@@ -18,3 +18,4 @@ opt.cursorline = false
 
 vim.opt.autoread = true
 
+
