@@ -426,3 +426,16 @@ km("n", "<Tab>", "<cmd>bnext<cr>", { desc = "Next Buffer" })
 km("n", "<S-Tab>", "<cmd>bprevious<cr>", { desc = "Previous Buffer" })
 
 km("n", "<leader>rs", generate_rust_setter, { noremap = true, silent = true, desc = "Generate Rust setter" })
+
+vim.keymap.set("n", "<leader>pn", function()
+	local col = vim.fn.col(".")
+	local sw = vim.fn.shiftwidth()
+	vim.cmd("normal! " .. (col + sw) .. "|")
+end, { desc = "Jump to next indent column" })
+
+-- Jump backward one indent level horizontally
+vim.keymap.set("n", "<leader>pp", function()
+	local col = vim.fn.col(".")
+	local sw = vim.fn.shiftwidth()
+	vim.cmd("normal! " .. math.max(1, col - sw) .. "|")
+end, { desc = "Jump to prev indent column" })
