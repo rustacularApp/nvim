@@ -17,22 +17,22 @@ return {
 				lsp = {
 					capabilities = capabilities,
 					color_capabilities = true,
-					-- on_attach = function (client, bufnr)
-					-- 	vim.api.nvim_create_autocmd("BufWritePre", {
-					-- 		buffer = bufnr,
-					-- 		callback = function ()
-					-- 			if vim.bo[bufnr].filetype == "dart" then
-					-- 				vim.lsp.buf.format({ async = false })
-					-- 			end
-					-- 		end
-					-- 	})
-					-- end,
+					on_attach = function (_, bufnr)
+						vim.api.nvim_create_autocmd("BufWritePre", {
+							buffer = bufnr,
+							callback = function ()
+								if vim.bo[bufnr].filetype == "dart" then
+									vim.lsp.buf.format({ async = false })
+								end
+							end
+						})
+					end,
 					settings = {
 						showTodos = true,
 						completeFunctionCalls = true,
-						-- Recommended: Enable closing labels (those grey comments at the end of widgets)
 						closingLabels = true,
-						displayInlayHints = false
+						displayInlayHints = false,
+						lineLength = 120
 					},
 				},
 			})
