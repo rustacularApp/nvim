@@ -1,4 +1,5 @@
 
+
 -- Pull in the wezterm API
 local wezterm = require 'wezterm'
 
@@ -9,10 +10,18 @@ local config = wezterm.config_builder()
 local firacode_font = wezterm.font {
 	family = "FiraCode Nerd Font",
 	harfbuzz_features = {
-		"cv01=1","cv02=1","cv06=1","cv11=1","cv14=1","cv16=1","cv17=1",
+		"cv01=1","cv02=1","cv10=1","cv11=1","cv14=1","cv16=1","cv17=1",
 		"cv18=1","cv29=1","cv30=1","cv31=1","ss01=1","ss03=1","ss04=1","ss05=1",
 	},
 	weight = "Regular",
+}
+
+local iosevka_slab_font = wezterm.font {
+	family = "Iosevka TermSlab NF",
+	harfbuzz_features = {
+		"ss07=1"
+	},
+	weight = "Regular"
 }
 
 local jetbrains_mono_font = wezterm.font {
@@ -92,7 +101,7 @@ config.wsl_domains = {
 config.enable_tab_bar = false
 config.automatically_reload_config = true
 config.window_close_confirmation = "NeverPrompt"
-config.window_decorations = "RESIZE"
+config.window_decorations = "NONE"
 config.hide_tab_bar_if_only_one_tab = true
 config.show_new_tab_button_in_tab_bar = false
 config.use_fancy_tab_bar = true
@@ -123,9 +132,10 @@ config.default_domain = "local"
 config.default_prog = { "powershell.exe", "-NoLogo" }
 
 -- Font selection (choose the font value you want active)
-config.font = victormono_font
+config.font = firacode_font
+config.cell_width = 0.9
 
-config.font_size = 16.0
+config.font_size = 12.0
 config.enable_scroll_bar = false
 config.cursor_thickness = 3.5
 config.audible_bell = "SystemBeep"
@@ -133,7 +143,7 @@ config.audible_bell = "SystemBeep"
 config.window_padding = {
 	left = 0,
 	right = 0,
-	top = 0,
+	top = 7,
 	bottom = 0,
 }
 
