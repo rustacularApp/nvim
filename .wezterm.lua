@@ -149,4 +149,15 @@ config.window_padding = {
 
 config.keys = my_keys
 
+
+local mux = wezterm.mux
+
+
+wezterm.on('gui-startup', function (cmd)
+	local _,_, window = mux.spawn_window(cmd or {})
+	window:gui_window():toggle_fullscreen()
+end)
+
+
+
 return config
