@@ -30,13 +30,13 @@ return {
 								},
 							},
 						},
-						keys = {
-							{
-								"<leader>e",
-								function() require("snacks").explorer({cwd = LazyVim.root()}) end,
-								desc = "Snacks: Explorer",
-							},
-						},
+						-- keys = {
+						-- 	{
+						-- 		"<leader>e",
+						-- 		function() require("snacks").explorer({cwd = LazyVim.root()}) end,
+						-- 		desc = "Snacks: Explorer",
+						-- 	},
+						-- },
 					},
 				},
 			},
