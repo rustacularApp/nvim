@@ -33,7 +33,7 @@ return {
 						keys = {
 							{
 								"<leader>e",
-								function() require("snacks").explorer() end,
+								function() require("snacks").explorer({cwd = LazyVim.root()}) end,
 								desc = "Snacks: Explorer",
 							},
 						},
