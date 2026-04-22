@@ -443,3 +443,12 @@ end, { desc = "Jump to prev indent column" })
 
 vim.keymap.set("n","<leader>e", "<leader>fE", { desc = "Explorer Snacks (cwd)", remap = true})
 vim.keymap.set("n","<leader>E", "<leader>fe", { desc = "Explorer Snacks (rwd)", remap = true})
+
+vim.keymap.set("n", "<leader>tr", function()
+  for _, client in ipairs(vim.lsp.get_clients({ bufnr = 0 })) do
+    client:stop()
+  end
+
+  vim.cmd("edit")
+  vim.notify("LSP restarted for Typst")
+end, { desc = "Typst/LSP Restart" })
