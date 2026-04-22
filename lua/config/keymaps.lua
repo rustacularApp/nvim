@@ -439,3 +439,7 @@ vim.keymap.set("n", "<leader>pp", function()
 	local sw = vim.fn.shiftwidth()
 	vim.cmd("normal! " .. math.max(1, col - sw) .. "|")
 end, { desc = "Jump to prev indent column" })
+
+
+vim.keymap.set("n","<leader>e", "<leader>fE", { desc = "Explorer Snacks (cwd)", remap = true})
+vim.keymap.set("n","<leader>E", "<leader>fe", { desc = "Explorer Snacks (rwd)", remap = true})

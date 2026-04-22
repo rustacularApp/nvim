@@ -8,7 +8,7 @@ return {
 						auto_close = true,
 						jump = { close = true },
 						layout = {
-							preview = true, -- enable preview
+							preview = true,
 							layout = {
 								box = "horizontal",
 								width = 0.8,
@@ -30,13 +30,6 @@ return {
 								},
 							},
 						},
-						-- keys = {
-						-- 	{
-						-- 		"<leader>e",
-						-- 		function() require("snacks").explorer({cwd = LazyVim.root()}) end,
-						-- 		desc = "Snacks: Explorer",
-						-- 	},
-						-- },
 					},
 				},
 			},
