@@ -452,3 +452,4 @@ vim.keymap.set("n", "<leader>tr", function()
   vim.cmd("edit")
   vim.notify("LSP restarted for Typst")
 end, { desc = "Typst/LSP Restart" })
+

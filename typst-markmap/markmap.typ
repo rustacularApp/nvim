@@ -8,32 +8,33 @@
   dot: 0.10em,
   curve: 1.5em,
   font-size: 8pt,
-  edge-stroke: rgb("#999"),
+  bg-color: black,
+  text-color: white,
+  root-dot-color: rgb("#1f77b4"),
+  branch-colors: (
+    rgb("#ff7f0e"), // Orange
+    rgb("#2ca02c"), // Green
+    rgb("#d62728"), // Red
+    rgb("#9467bd"), // Purple
+    rgb("#17becf"), // Cyan
+  ),
 )
 
-// --- The Magic Helper: Rectified ---
 #let transform-input(it) = {
   if type(it) == dictionary {
     let pairs = it.pairs()
     if pairs.len() == 0 { return none }
-    // Take the first key as the label, and its value as the children
     let (label, val) = pairs.at(0)
-
     let children = ()
     if type(val) == dictionary {
-      // Handle "Key": ("SubKey": "Value")
       children = val.pairs().map(p => transform-input(( (p.at(0)): p.at(1) )))
     } else if type(val) == array {
-      // Handle "Key": ("A", "B", ("C": "D"))
       children = val.map(child => transform-input(child))
     } else if val != none {
-      // Handle "Key": "LeafValue"
       children = ( (label: val, children: ()), )
     }
-
     (label: label, children: children)
   } else {
-    // Base case: it's just a string or content block
     (label: it, children: ())
   }
 }
@@ -47,9 +48,10 @@
   let root = transform-input(data)
   if root == none { return }
 
-  set text(size: cfg.font-size)
+  // Set local text color
+  set text(size: cfg.font-size, fill: cfg.text-color)
+  
   let abs-len(l) = measure(h(l)).width
-
   let dx = abs-len(cfg.dx)
   let leaf-step = abs-len(cfg.leaf-step)
   let sibling-gap = abs-len(cfg.sibling-gap)
@@ -84,28 +86,67 @@
 
   let laid = layout-node(root)
 
-  cetz.canvas({
-    import cetz.draw: *
-    let draw-tree(n) = {
-      let x = n.x
-      let y = -n.y
-      let lx = n.line-end-x
-      for child in n.children {
-        let cx = child.x
-        let cy = -child.y
-        let bend = if (cx - lx) > (2.0 * curve) { curve } else { (cx - lx) / 2.0 }
-        bezier((lx, y), (cx - dot, cy), (lx + bend, y), (cx - bend, cy), stroke: (paint: cfg.edge-stroke, thickness: 1pt))
-        draw-tree(child)
+  // Wrap in a block for background
+  block(fill: cfg.bg-color, inset: 1em, radius: 4pt, {
+    cetz.canvas({
+      import cetz.draw: *
+      
+      let draw-tree(n, current-color, is-root: false) = {
+        let x = n.x
+        let y = -n.y
+        let lx = n.line-end-x
+        
+        for (i, child) in n.children.enumerate() {
+          let cx = child.x
+          let cy = -child.y
+          
+          // Logic: If we are at the root, pick a new color for each child.
+          // Otherwise, inherit the branch color.
+          let branch-c = if is-root {
+            cfg.branch-colors.at(calc.rem(i, cfg.branch-colors.len()))
+          } else {
+            current-color
+          }
+          
+          let bend = if (cx - lx) > (2.0 * curve) { curve } else { (cx - lx) / 2.0 }
+          
+          // Draw connecting line to child
+          bezier((lx, y), (cx - dot, cy), (lx + bend, y), (cx - bend, cy), 
+                 stroke: (paint: branch-c, thickness: 1pt))
+          
+          draw-tree(child, branch-c)
+        }
+        
+        // Underline for current node
+        line((x, y), (lx, y), stroke: (paint: if is-root { cfg.text-color } else { current-color }, thickness: 1pt))
+        
+        // Node Dot
+        if is-root {
+          circle((x, y), radius: 2.5pt, fill: cfg.root-dot-color, stroke: none)
+        } else {
+          circle((x, y), radius: 1.5pt, fill: current-color, stroke: none)
+        }
+        
+        content((x + text-gap, y + y-offset), [#n.label], anchor: "south-west")
       }
-      line((x, y), (lx, y), stroke: (paint: cfg.edge-stroke, thickness: 1pt))
-      circle((x, y), radius: 2pt, fill: rgb("#1f77b4"), stroke: none)
-      content((x + text-gap, y + y-offset), [#n.label], anchor: "south-west")
-    }
-    draw-tree(laid.node)
+      
+      // Start recursion with text-color as fallback for root
+      draw-tree(laid.node, cfg.text-color, is-root: true)
+    })
   })
 }
 
-// --- Usage Guide ---
-// 1. Root MUST be a dictionary: ("Root": children)
-// 2. Keys MUST be strings: "Title": ...
-// 3. Values can be: Strings, Arrays, or further Dictionaries.
+#render-markmap(
+  (
+    "Backend Tech": (
+      "Language": "Rust",
+      "Stack": ("Axum", "Tokio", "Sea-ORM"),
+      "Deeply": (
+        "Nested": (
+          "Nodes": "Done!"
+        )
+      ),
+      "Auth": ("JWT", "OAuth2", "Argon2")
+    )
+  )
+)
