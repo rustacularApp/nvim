@@ -5,6 +5,7 @@ return {
 		init = function ()
 			vim.g.rustaceanvim = {
 				server = {
+					extraEnv = { CARGO_TARGET_DIR = "target/rust-analyzer" },
 					settings = {
 						['rust-analyzer'] = {
 							procMacro = {
