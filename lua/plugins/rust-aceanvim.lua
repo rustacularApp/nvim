@@ -15,6 +15,21 @@ return {
 									["napi-derive"] = { "napi" },
 								},
 							},
+							inlayHints = {
+								chainingHints = { enable = false },
+								typeHints = { enable = true },
+								parameterHints = { enable = false },
+								renderColons = true
+							},
+							completion = {
+								callable = { snippets = "add_parentheses" },
+                                fullFunctionSignatures = { enable = false },
+                                autoimport = { enable = true },
+							},
+							imports = {
+								granularity = { group = "module" },
+								prefix = "self"
+							},
 							diagnostics = {
 								enable = true,
 								disabled = { "unresolved-proc-macro" },

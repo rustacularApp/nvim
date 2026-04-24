@@ -9,8 +9,16 @@ opt.tabstop = 4
 opt.shiftwidth = 4 -- 0 previous
 opt.softtabstop = 4 -- 1 previous
 opt.autoindent = true
+
+
+
 vim.g.autoformat = false
 vim.g.minipairs_disable = true
+-- vim.g.lazyvim_lsp_inlay_hints = false
+
+
+
+
 opt.fileformat = "unix"
 opt.fileformats = "unix"
 opt.fixeol = true
