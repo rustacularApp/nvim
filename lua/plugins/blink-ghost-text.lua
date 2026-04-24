@@ -3,7 +3,7 @@ return {
 		'saghen/blink.cmp',
 		opts = {
 			completion = {
-				ghost_text = { enabled = false }, -- This stops the "out of range" extmark crashes
+				ghost_text = { enabled = false },
 				trigger = {
 					prefetch_on_insert = true,
 					show_delay_ms = 60
