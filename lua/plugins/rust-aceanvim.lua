@@ -5,9 +5,18 @@ return {
 		init = function ()
 			vim.g.rustaceanvim = {
 				server = {
-					extraEnv = { CARGO_TARGET_DIR = "target/rust-analyzer" },
+					on_attach = function (client, bufnr)
+						client.server_capabilities.semanticTokensProvider = nil
+					end,
+					extraEnv = {
+						CARGO_TARGET_DIR = "target/rust-analyzer",
+						CARGO_BUILD_JOBS = "2"
+					},
 					settings = {
 						['rust-analyzer'] = {
+							cachePriming = {
+								enable = false
+							},
 							procMacro = {
 								enable = true,
 								ignored = {
@@ -45,6 +54,17 @@ return {
 								command = "clippy",
 								extraArgs = { "--no-deps" },
 							},
+							files = {
+								excludeDirs = {
+									".dart_tool",
+									".flutter-plugins",
+									".flutter-plugins-dependencies",
+									"build",
+									"target",
+									"node_modules",
+									".git"
+								}
+							}
 						},
 					},
 				},
