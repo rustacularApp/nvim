@@ -27,7 +27,7 @@ return {
 							inlayHints = {
 								chainingHints = { enable = false },
 								typeHints = { enable = true },
-								parameterHints = { enable = false },
+								parameterHints = { enable = true },
 								renderColons = true
 							},
 							completion = {
