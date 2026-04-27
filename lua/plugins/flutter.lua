@@ -1,7 +1,7 @@
 return {
 	{
 		"nvim-flutter/flutter-tools.nvim",
-		ft = "dark",
+		ft = "dart",
 		dependencies = {
 			"nvim-lua/plenary.nvim",
 			"saghen/blink.cmp", -- Ensure blink is a dependency
