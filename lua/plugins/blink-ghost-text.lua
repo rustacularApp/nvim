@@ -4,10 +4,6 @@ return {
 		opts = {
 			completion = {
 				ghost_text = { enabled = false },
-				trigger = {
-					prefetch_on_insert = true,
-					show_delay_ms = 60
-				},
 				list = {
 					max_items = 15,
 					selection = {
