@@ -33,7 +33,7 @@ return {
 							completion = {
 								callable = { snippets = "add_parentheses" },
                                 fullFunctionSignatures = { enable = false },
-                                autoimport = { enable = false },
+                                autoimport = { enable = true },
 								postfix = { enable = false },
 							},
 							imports = {
