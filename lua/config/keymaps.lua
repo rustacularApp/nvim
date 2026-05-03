@@ -382,7 +382,7 @@ local function generate_rust_getter()
       ret_type = t
       body_line = "self." .. name
     elseif t == "String" then
-      ret_type = "&String"
+      ret_type = "&str"
       body_line = "&self." .. name
     else
       ret_type = "&" .. t
