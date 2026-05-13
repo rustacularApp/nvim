@@ -521,3 +521,8 @@ vim.keymap.set("n", "<leader>re", function()
         vim.notify("Could not parse variants.", vim.log.levels.WARN)
     end
 end, { desc = "Fill Enum Variants from LSP" })
+
+
+
+vim.keymap.set("n", "<leader>se", "<cmd>Telescope lsp_document_symbols<cr>", { desc = "Document Symbols"})
+vim.keymap.set("n", "<leader>sE", "<cmd>Telescope current_buffer_fuzzy_find<cr>", { desc = "Buffer Find"})
