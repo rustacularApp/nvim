@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:18
+    container_name: db
+    environment:
+      POSTGRES_USER: sohailmd123
+      POSTGRES_PASSWORD: toormd123
+      POSTGRES_DB: rustacular
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./init-db:/docker-entrypoint-initdb.d
+
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: pgbouncer
+    depends_on:
+      - db
+    ports:
+      - "6432:6432"
+    volumes:
+      - ./pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./userlist.txt:/etc/pgbouncer/userlist.txt:ro
+
+  redis:
+      image: redis:7-alpine
+      container_name: redis
+      ports:
+        - "6379:6379"
+      volumes:
+        - redisdata:/data
+      command: redis-server --appendonly yes --requirepass toormd123
+      restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
