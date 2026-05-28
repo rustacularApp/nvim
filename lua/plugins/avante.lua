@@ -1,0 +1,23 @@
+return {}
+-- return {
+-- 	{
+-- 		"yetone/avante.nvim",
+-- 		dependencies = {
+-- 			"nvim-lua/plenary.nvim",
+-- 			"MunifTanjim/nui.nvim",
+-- 		},
+-- 		opts = {
+-- 			provider = "gemini_flash",
+-- 			providers = {
+-- 				gemini_flash = {
+-- 					__inherited_from = "gemini",
+-- 					model = "gemini-3.5-flash"
+-- 				},
+-- 				gemini_pro = {
+-- 					__inherited_from = "gemini",
+-- 					model = "gemini-3.1-pro-preview"
+-- 				}
+-- 			}
+-- 		}
+-- 	}
+-- }
