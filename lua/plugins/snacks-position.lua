@@ -8,10 +8,13 @@ return {
 				},
 				layouts = {
 					telescope = {
-						reverse = "true"
+						reverse = true
 					}
 				},
 				sources = {
+					files = {
+						hidden = true
+					},
 					explorer = {
 						auto_close = true,
 						jump = { close = true },
