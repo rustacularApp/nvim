@@ -3,7 +3,18 @@ return {
 		"snacks.nvim",
 		opts = {
 			picker = {
+				layout = {
+					preset = "telescope"
+				},
+				layouts = {
+					telescope = {
+						reverse = true
+					}
+				},
 				sources = {
+					files = {
+						hidden = true
+					},
 					explorer = {
 						auto_close = true,
 						jump = { close = true },
