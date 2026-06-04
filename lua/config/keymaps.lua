@@ -528,3 +528,6 @@ vim.keymap.set("n", "<leader>se", "<cmd>Telescope lsp_document_symbols<cr>", { d
 vim.keymap.set("n", "<leader>sE", "<cmd>Telescope current_buffer_fuzzy_find<cr>", { desc = "Buffer Find"})
 vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], {desc = "Exit Terminal Mode"})
 vim.keymap.set("n", "<leader>tt", "<cmd>terminal powershell.exe<cr>", {desc = "Open Powershell Terminal"})
+
+
+
