@@ -6,7 +6,7 @@ return {
 		require('treesj').setup({
 			use_default_keymaps = true,
 			cursor_behaviour = "hold",
-			max_join_length = 5000
+			max_join_length = 10000
 		})
 	end
 }

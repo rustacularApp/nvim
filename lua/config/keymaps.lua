@@ -530,4 +530,115 @@ vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], {desc = "Exit Terminal Mode"})
 vim.keymap.set("n", "<leader>tt", "<cmd>terminal powershell.exe<cr>", {desc = "Open Powershell Terminal"})
 
 
+-- Shared helper to query LSP and parse a struct's fields
+local function get_struct_fields()
+    local win = vim.api.nvim_get_current_win()
+    local cword = vim.fn.expand("<cword>")
 
+    local clients = vim.lsp.get_clients({ bufnr = 0, name = "rust-analyzer" })
+    if #clients == 0 then clients = vim.lsp.get_clients({ bufnr = 0 }) end
+
+    local encoding = clients[1] and clients[1].offset_encoding or "utf-16"
+    local params = vim.lsp.util.make_position_params(win, encoding)
+    local responses = vim.lsp.buf_request_sync(0, "textDocument/definition", params, 2000)
+    if not responses or vim.tbl_isempty(responses) then
+        vim.notify("No LSP definition found", vim.log.levels.WARN)
+        return nil, nil
+    end
+
+    local result
+    for _, resp in pairs(responses) do
+        if resp.result and not vim.tbl_isempty(resp.result) then
+            result = resp.result[1] or resp.result
+            break
+        end
+    end
+
+    if not result then return nil, nil end
+
+    local uri = result.uri or result.targetUri
+    local bufnr = vim.uri_to_bufnr(uri)
+    vim.fn.bufload(bufnr)
+    local start_line = (result.range or result.targetSelectionRange).start.line
+    -- Read 50 lines down from the struct definition
+    local lines = vim.api.nvim_buf_get_lines(bufnr, start_line, start_line + 50, false)
+    
+    local fields = {}
+    local inside_struct = false
+    for _, l in ipairs(lines) do
+        if l:match("struct%s+" .. cword) then
+            inside_struct = true
+        elseif inside_struct and l:match("^%s*}") then
+            break
+        elseif inside_struct then
+            local line_clean = l:gsub("^%s*", ""):gsub("%s*//.*$", "") -- Trim and remove comments
+            if not line_clean:match("^#") and line_clean ~= "" then
+                -- Strip out visibility modifiers like pub, pub(crate), pub(in self)
+                local standard_line = line_clean:gsub("^pub%s*%b()%s*", ""):gsub("^pub%s*", "")
+                local f_name, f_type = standard_line:match("^([%w_]+)%s*:%s*(.+)$")
+                if f_name then
+                    f_type = f_type:gsub(",%s*$", "") -- Strip trailing comma
+                    local is_option = f_type:match("Option%s*<") ~= nil
+                    table.insert(fields, { name = f_name, is_option = is_option })
+                end
+            end
+        end
+    end
+    return cword, fields
+end
+
+-- 1. Builder Generation (<leader>rb)
+vim.keymap.set("n", "<leader>rb", function()
+    local cword, fields = get_struct_fields()
+    if not fields or #fields == 0 then
+        vim.notify("Could not parse struct fields.", vim.log.levels.WARN)
+        return
+    end
+
+    -- bon uses StructName::builder() for associated builders
+    local lines_to_insert = { cword .. "::builder()" }
+    for _, f in ipairs(fields) do
+        if f.is_option then
+            table.insert(lines_to_insert, "    ." .. f.name .. "(Some(" .. f.name .. "))")
+        else
+            table.insert(lines_to_insert, "    ." .. f.name .. "(" .. f.name .. ")")
+        end
+    end
+    table.insert(lines_to_insert, "    .build()")
+
+    local r = vim.api.nvim_win_get_cursor(0)[1]
+    vim.api.nvim_buf_set_lines(0, r - 1, r, false, lines_to_insert)
+    
+    -- Format the inserted block
+    vim.api.nvim_win_set_cursor(0, { r, 0 })
+    vim.cmd("normal! =" .. #lines_to_insert .. "_")
+    vim.notify("Generated builder for " .. cword, vim.log.levels.INFO)
+end, { desc = "Generate bon::Builder implementation" })
+
+
+-- 2. Dissolve Generation (<leader>rd) [Updated for multi-line layout]
+vim.keymap.set("n", "<leader>rd", function()
+    local cword, fields = get_struct_fields()
+    if not fields or #fields == 0 then
+        vim.notify("Could not parse struct fields.", vim.log.levels.WARN)
+        return
+    end
+
+    -- Intelligently guess the instance variable name by converting PascalCase to snake_case
+    local instance_name = cword:gsub("([a-z0-9])([A-Z])", "%1_%2"):lower()
+    
+    -- Build the multi-line destructuring statement
+    local lines_to_insert = { "let (" }
+    for _, f in ipairs(fields) do
+        table.insert(lines_to_insert, "    " .. f.name .. ",")
+    end
+    table.insert(lines_to_insert, ") = " .. instance_name .. ".dissolve();")
+
+    local r = vim.api.nvim_win_get_cursor(0)[1]
+    vim.api.nvim_buf_set_lines(0, r - 1, r, false, lines_to_insert)
+    
+    -- Format the entire newly inserted block
+    vim.api.nvim_win_set_cursor(0, { r, 0 })
+    vim.cmd("normal! =" .. #lines_to_insert .. "_")
+    vim.notify("Generated multi-line dissolve for " .. cword, vim.log.levels.INFO)
+end, { desc = "Generate bon dissolve destructuring (multi-line)" })
