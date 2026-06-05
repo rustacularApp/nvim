@@ -7,6 +7,7 @@ return {
 			"saghen/blink.cmp", -- Ensure blink is a dependency
 		},
 		config = function()
+
 			local capabilities = require('blink.cmp').get_lsp_capabilities()
 
 			require("flutter-tools").setup({
