@@ -20,7 +20,7 @@ return {
         end,
     },
     {
-        "williamboman/mason-lspconfig.nvim",
+        "mason-org/mason.nvim",
         opts = {
             ensure_installed = {}, -- Prevents Mason from trying to auto-download them
         },
@@ -36,18 +36,6 @@ return {
         "mfussenegger/nvim-lint",
         opts = {
             linters_by_ft = {}, -- Wipes out linting assignments per file type
-        },
-    },
-    {
-        "jay-babu/mason-nvim-dap.nvim",
-        opts = {
-            ensure_installed = {},
-        },
-    },
-    {
-        "williamboman/mason.nvim",
-        opts = {
-            ensure_installed = {}, -- Clears any remaining fallback tools
         },
     },
 }
