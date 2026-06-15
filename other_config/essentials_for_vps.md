@@ -49,6 +49,7 @@ sudo tar -C /opt -xzf nvim-linux-x86_64.tar.gz
 
 ```
 export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
+sudo apt instal gcc fd-find
 ```
 
 ## Docker Installation
@@ -80,4 +81,12 @@ sudo apt update
 
 ```
 sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+## Nginx
+
+### Ninth
+
+```
+sudo apt install nginx -y
 ```
