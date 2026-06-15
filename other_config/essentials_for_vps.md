@@ -89,4 +89,21 @@ sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin dock
 
 ```
 sudo apt install nginx -y
+sudo ln -s /etc/nginx/sites-available/rustacular.conf /etc/nginx/sites-enabled/rustacular.conf
+```
+
+## Certbot
+
+### Tenth
+
+```
+sudo apt update
+sudo apt install certbot python3-certbot-nginx -y
+
+```
+
+## Elevent
+
+```
+sudo certbot --nginx -d rustacular.com -d www.rustacular.com
 ```
