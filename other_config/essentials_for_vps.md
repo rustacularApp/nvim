@@ -102,8 +102,18 @@ sudo apt install certbot python3-certbot-nginx -y
 
 ```
 
-## Elevent
+### Elevent
 
 ```
 sudo certbot --nginx -d rustacular.com -d www.rustacular.com
+```
+
+## Extras
+
+```
+// Copy to vps
+scp -r source/folder/* <username>@<host_ip>:/destination/folder
+rsync -a /source/folder/* /destination/folder/ (move with overwriting)
+sudo chown -R www-data:www-data /var/www/html
+sudo chomd -R 755 /var/www/html
 ```
