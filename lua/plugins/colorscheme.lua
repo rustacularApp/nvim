@@ -5,10 +5,10 @@ return {
 		config = function()
 			require("onedarkpro").setup({
 				options = {
-					transparency = true
+					transparency = false
 				}
 			})
-			vim.cmd("colorscheme onedark_dark")
+			vim.cmd("colorscheme vaporwave")
 		end,
 	},
 }
