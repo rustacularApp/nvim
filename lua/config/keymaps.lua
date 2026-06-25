@@ -645,21 +645,47 @@ vim.keymap.set("n", "<leader>rd", function()
 end, { desc = "Generate bon dissolve destructuring (multi-line)" })
 
 
-vim.keymap.set("n", "<leader>qD", function ()
-	local file = vim.api.nvim_buf_get_name(0)
-	if file == "" then
-		vim.notify("No file name for current buffer", vim.log.levels.WARN)
-		return
-	end
 
-	local ok = vim.fn.delete(file) == 0
-	if ok then
-		vim.cmd("q!")
-	else
-		vim.notify("Failed to delete file: ".. file, vim.log.levels.ERROR)
-	end
-end, { desc = "Delete current file and quit" })
+local function trash_current_file()
+  local file = vim.api.nvim_buf_get_name(0)
 
+  if file == "" then
+    vim.notify("No file name for current buffer", vim.log.levels.WARN)
+    return
+  end
 
+  if vim.bo.modified then
+    vim.notify("Buffer has unsaved changes. Save first.", vim.log.levels.WARN)
+    return
+  end
+
+  local confirm = vim.fn.confirm(
+    "Move this file to local trash?",
+    "&Yes\n&No",
+    2
+  )
+
+  if confirm ~= 1 then
+    return
+  end
+
+  local trash_dir = vim.fn.stdpath("state") .. "/trash"
+  vim.fn.mkdir(trash_dir, "p")
+
+  local name = vim.fn.fnamemodify(file, ":t")
+  local ts = os.date("%Y%m%d-%H%M%S")
+  local dest = trash_dir .. "/" .. ts .. "-" .. name
+
+  local ok, err = pcall(vim.fn.rename, file, dest)
+  if not ok or err ~= 0 then
+    vim.notify("Failed to move file to trash", vim.log.levels.ERROR)
+    return
+  end
+
+  vim.cmd("bd!")
+  vim.notify("Moved to trash: " .. dest, vim.log.levels.INFO)
+end
+
+vim.keymap.set("n", "<leader>qD", trash_current_file, { desc = "Trash current file and quit" })
 
 
