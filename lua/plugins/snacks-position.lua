@@ -125,6 +125,21 @@ return {
 						hidden = true,
 					},
 					explorer = {
+						win = {
+							list = {
+								keys = {
+									["Y"] = "yank_relative_cwd"
+								}
+							}
+						},
+						actions = {
+							yank_relative_cwd = function (_, item)
+								local rel = vim.fn.fnamemodify(item.file, ":.")
+								vim.fn.setreg('"', rel)
+								vim.fn.setreg("+", rel)
+								vim.notify("Copied relative path: " .. rel)
+							end
+						},
 						auto_close = true,
 						jump = { close = true },
 						layout = {
