@@ -645,6 +645,20 @@ vim.keymap.set("n", "<leader>rd", function()
 end, { desc = "Generate bon dissolve destructuring (multi-line)" })
 
 
+vim.keymap.set("n", "<leader>qD", function ()
+	local file = vim.api.nvim_buf_get_name(0)
+	if file == "" then
+		vim.notify("No file name for current buffer", vim.log.levels.WARN)
+		return
+	end
+
+	local ok = vim.fn.delete(file) == 0
+	if ok then
+		vim.cmd("q!")
+	else
+		vim.notify("Failed to delete file: ".. file, vim.log.levels.ERROR)
+	end
+end, { desc = "Delete current file and quit" })
 
 
 
