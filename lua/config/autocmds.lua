@@ -1,6 +1,12 @@
 vim.api.nvim_create_autocmd(
-    { "FocusGained", "BufEnter", "CursorHold" },
-    { command = "checktime" }
+	{ "FocusGained", "BufEnter", "CursorHold" },
+	{
+		callback = function ()
+			if vim.fn.getcmdwintype() == "" then
+				vim.cmd("checktime")
+			end
+		end
+	}
 )
 
 vim.api.nvim_create_autocmd("FileType", {
