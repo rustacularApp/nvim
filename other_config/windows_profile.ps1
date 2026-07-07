@@ -1,4 +1,3 @@
-
 # ----- dev helpers for Rustacular (put in Microsoft.PowerShell_profile.ps1) -----
 #
 
@@ -33,7 +32,7 @@ function Start-Frontend-Rustacular {
         Start-Process -FilePath 'powershell' -ArgumentList '-NoExit','-Command',"Set-Location `'$RustacularFrontendPath`'; flutter run"
     } else {
         Push-Location $RustacularFrontendPath
-        try { flutter run --dart-define-from-file=env.json}
+        try { flutter run --dart-define-from-file=env.dev.json}
         finally { Pop-Location }
     }
 }
@@ -45,7 +44,7 @@ function Start-Frontend-News {
         Start-Process -FilePath 'powershell' -ArgumentList '-NoExit','-Command',"Set-Location `'$NewsFrontendPath`'; flutter run"
     } else {
         Push-Location $NewsFrontendPath
-        try { flutter run --dart-define-from-file=env.json}
+        try { flutter run --dart-define-from-file=env.dev.json}
         finally { Pop-Location }
     }
 }
@@ -61,6 +60,14 @@ function Start-Frontend-Fold {
         try { flutter run -d emulator-5556 --dart-define-from-file=env.json}
         finally { Pop-Location }
     }
+}
+
+function Build-Frontend-Bundle-Rustacular {
+
+	Push-Location "C:\development\projects\Rustacular\rustacular"
+	try { flutter build appbundle --release --dart-define-from-file=env.prod.json }
+	finally { Pop-Location }
+
 }
 
 function Start-Emulator {
@@ -316,29 +323,30 @@ function Open-DevNvim-All {
 }
 
 # short aliases Common
+Set-Alias onv Open-Neovim
 Set-Alias ofnw Open-FrontendNvim-NewWindow
 Set-Alias obnw Open-BackendNvim-NewWindow
 Set-Alias odna Open-DevNvim-All
-
-
-
-# Optional: short aliases Rustacular
-Set-Alias ofn_rustacular Open-FrontendNvim-Rustacular
-Set-Alias obn_rustacular Open-BackendNvim-Rustacular
-Set-Alias sdb_rustacular Start-Backend-Rustacular
-Set-Alias sdfe_rustacular Start-Frontend
-Set-Alias sdfe1_rustacular Start-Frontend-Fold
 Set-Alias sde Start-Emulator
 Set-Alias sdef Start-Emulator-Frontend
 Set-Alias sde1 Start-Emulator-Fold
 Set-Alias sda Start-Dev-All
-Set-Alias sdw Start-Dart-Watch
-Set-Alias onv Open-Neovim
-Set-Alias dfa_rustacular Delete-Frontend-App-Rustacular
-Set-Alias dfa1 Delete-Frontend-App-Fold
-Set-Alias smr_rustacular Sea-Orm-MigrateReset-Rustacular
-Set-Alias smu_rustacular Sea-Orm-MigrateUp-Rustacular
-Set-Alias sge_rustacular Sea-Orm-GenerateEntity-Rustacular
+
+
+
+# Optional: short aliases Rustacular
+Set-Alias ofn_rustacular Open-FrontendNvim-Rustacular # Done
+Set-Alias obn_rustacular Open-BackendNvim-Rustacular # Done
+Set-Alias sdb_rustacular Start-Backend-Rustacular # Done
+Set-Alias sdfe_rustacular Start-Frontend-Rustacular # Done
+Set-Alias sdfe1_rustacular Start-Frontend-Fold
+Set-Alias sdw_rustacular Start-Dart-Watch-Rustacular # Done
+Set-Alias bfb_rustacular Build-Frontend-Bundle-Rustacular
+Set-Alias dfa_rustacular Delete-Frontend-App-Rustacular # Done
+Set-Alias dfa1_rustacular Delete-Frontend-App-Fold
+Set-Alias smr_rustacular Sea-Orm-MigrateReset-Rustacular # Done
+Set-Alias smu_rustacular Sea-Orm-MigrateUp-Rustacular # Done
+Set-Alias sge_rustacular Sea-Orm-GenerateEntity-Rustacular # Done
 
 Set-Alias ofn_news Open-FrontendNvim-News
 Set-Alias obn_news Open-BackendNvim-News
