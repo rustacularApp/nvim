@@ -1,0 +1,81 @@
+version: "3.5"
+
+networks:
+  penpot-net:
+    driver: bridge
+
+volumes:
+  penpot_postgres_data:
+  penpot_assets_data:
+
+services:
+  penpot-frontend:
+    image: "penpotapp/frontend:latest"
+    restart: always
+    ports:
+      - "9001:80"
+    volumes:
+      - penpot_assets_data:/opt/data/assets
+    depends_on:
+      - penpot-backend
+      - penpot-exporter
+    networks:
+      - penpot-net
+    environment:
+      - PENPOT_FLAGS=disable-registration enable-login-with-password
+      - PENPOT_PUBLIC_URI=http://localhost:9001
+
+  penpot-backend:
+    image: "penpotapp/backend:latest"
+    restart: always
+    volumes:
+      - penpot_assets_data:/opt/data/assets
+    depends_on:
+      - penpot-postgres
+      - penpot-valkey
+    networks:
+      - penpot-net
+    environment:
+      - PENPOT_FLAGS=disable-registration enable-login-with-password enable-prepl-server disable-email-verification
+      - PENPOT_PUBLIC_URI=http://localhost:9001
+      - PENPOT_DATABASE_URI=postgresql://penpot_user:penpot_pass_99@penpot-postgres/penpot_db
+      - PENPOT_VALKEY_URI=valkey://penpot-valkey/0
+      - PENPOT_SECRET_KEY=my_ultra_secure_local_secret_key_123
+      - PENPOT_OBJECTS_STORAGE_BACKEND=fs
+      - PENPOT_ASSETS_STORAGE_BACKEND=assets-fs
+
+  penpot-exporter:
+    image: "penpotapp/exporter:latest"
+    restart: always
+    networks:
+      - penpot-net
+    environment:
+      # FIXED: Points internally to the frontend container instead of looping back to localhost
+      - PENPOT_PUBLIC_URI=http://penpot-frontend
+      # FIXED: Added the required secret key to pass the Malli schema validator
+      - PENPOT_SECRET_KEY=my_ultra_secure_local_secret_key_123
+      - PENPOT_REDIS_URI=redis://penpot-valkey/0
+
+  penpot-postgres:
+    image: "postgres:15"
+    restart: always
+    volumes:
+      - penpot_postgres_data:/var/lib/postgresql/data
+    networks:
+      - penpot-net
+    environment:
+      - POSTGRES_DB=penpot_db
+      - POSTGRES_USER=penpot_user
+      - POSTGRES_PASSWORD=penpot_pass_99
+    command: >
+      postgres
+      -c shared_buffers=4GB
+      -c work_mem=64MB
+      -c maintenance_work_mem=1GB
+      -c effective_cache_size=12288MB
+
+  penpot-valkey:
+    image: "valkey/valkey:7.2"
+    restart: always
+    networks:
+      - penpot-net
