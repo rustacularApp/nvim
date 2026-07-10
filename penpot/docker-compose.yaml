@@ -23,7 +23,7 @@ services:
     image: "penpotapp/frontend:${PENPOT_VERSION:-2.16}"
     restart: always
     ports:
-      # Binding to 127.0.0.1 limits traffic strictly to your local PC
+      # Binds to localhost only so no one on your local network can access it
       - "127.0.0.1:9001:8080"
 
     volumes:
@@ -88,8 +88,10 @@ services:
       - penpot
 
     environment:
-      << : [*penpot-secret-key, *penpot-public-uri]
-      PENPOT_INTERNAL_URI: http://penpot-frontend:8080
+      # We inherit only the secret key here, omitting the public-uri anchor
+      << : [*penpot-secret-key]
+      # We explicitly route the exporter's browser to the internal frontend container
+      PENPOT_PUBLIC_URI: http://penpot-frontend:8080
       PENPOT_REDIS_URI: redis://penpot-valkey/0
 
   penpot-postgres:
