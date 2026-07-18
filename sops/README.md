@@ -31,7 +31,7 @@ age-keygen -o C:/Users/<name>/AppData/Roaming/sops/age/keys.text
 ```yaml
 creation_rules:
   - path_regex: \.env(\.enc)?$
-    age: "<age_1>,<age_2>"
+    age: "<age_1>"
 ```
 
 ## Configure .githooks for automation
@@ -96,4 +96,31 @@ if [ -f backend/.env.enc ]; then
         exit 1
     fi
 fi
+```
+#### This will generate a .env.enc file which is encrypted
+
+## Commit and push these changes from root machine
+
+## Setup in another remote machine
+
+### Install Sops, Age
+
+### Generate Age keys.txt
+
+### Copy the Public Key generated
+
+### Pull the repo which was pushed by root machine and past the Public key in .sops.yaml with comma seperation
+
+```yaml
+creation_rules:
+  - path_regex: \.env(\.enc)?$
+    age: "<age_1>,<age_2>"
+```
+
+### Push this repo now
+
+### In your root machine pull the repo now and do
+
+```
+sops updatekeys <path_to .env.enc>
 ```
