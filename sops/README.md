@@ -72,7 +72,7 @@ if [ -f backend/.env ]; then
 fi
 ```
 
-#### Add post-merge file (with no extension) for decrypting pre committing
+#### Add post-merge file (with no extension) for decrypting post merging
 
 ```
 #!/bin/bash
