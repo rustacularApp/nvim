@@ -124,3 +124,5 @@ creation_rules:
 ```
 sops updatekeys <path_to .env.enc>
 ```
+
+### Now push this repo with some changes and you will see a .env decrypted file and .env.enc encrypted file in your remote machine
