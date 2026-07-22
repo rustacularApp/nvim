@@ -3,7 +3,11 @@ return {
     "folke/todo-comments.nvim",
     opts = {
       keywords = {
-        STEP = { icon = "🪜", color = "info" },
+        STEP = {
+			icon = "🪜",
+			color = "info",
+			alt = {"step", "Step"}
+		},
       },
       search = {
         pattern = [[\b(TODO|FIX|FIXME|BUG|HACK|WARN|WARNING|PERF|NOTE|TEST):]],
