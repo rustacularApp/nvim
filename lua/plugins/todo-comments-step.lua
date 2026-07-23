@@ -78,7 +78,11 @@ return {
           local has_snacks, snacks = pcall(require, "snacks")
           if has_snacks then
             snacks.picker.todo_comments({
-              keywords = { "STEP" },
+              keywords = {
+				"STEP",
+				"step",
+				"Step"
+			},
               dirs = { cwd },
             })
           else
