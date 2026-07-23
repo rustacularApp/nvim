@@ -4,35 +4,38 @@ return {
     opts = {
       keywords = {
         STEP = {
-			icon = "🪜",
-			color = "info",
-			alt = {"step", "Step"}
-		},
+          icon = "🪜",
+          color = "info",
+          alt = { "step", "Step" }
+        },
       },
       search = {
-        pattern = [[\b(TODO|FIX|FIXME|BUG|HACK|WARN|WARNING|PERF|NOTE|TEST):]],
+        -- Allows todo-comments to dynamically swap in the keywords we request
+        pattern = [[\b(KEYWORDS):]],
       },
     },
     keys = {
-      -- 1. Standard search (<leader>st) to exclude STEP globally
+      -- 1. Standard search (<leader>st)
+      -- This lists the default primary keywords. It will automatically match all of
+      -- their alternates (e.g., BUG, FIXME, WARNING) while completely excluding STEP.
       {
         "<leader>st",
         function()
           local has_snacks, snacks = pcall(require, "snacks")
           if has_snacks then
             snacks.picker.todo_comments({
-              keywords = { "TODO", "FIX", "FIXME", "HACK", "WARN", "PERF", "NOTE", "TEST" },
+              keywords = { "TODO", "FIX", "HACK", "WARN", "PERF", "NOTE", "TEST" },
             })
           else
-            vim.cmd("TodoTelescope keywords=TODO,FIX,FIXME,HACK,WARN,PERF,NOTE,TEST")
+            vim.cmd("TodoTelescope keywords=TODO,FIX,HACK,WARN,PERF,NOTE,TEST")
           end
         end,
         desc = "Todo (excluding STEP)",
       },
 
-      -- 2. Find only STEP comments in the current file (<leader>fs)
+      -- 2. Find only STEP comments in the current file (<leader>sf)
       {
-        "<leader>fs",
+        "<leader>sf",
         function()
           local current_file = vim.api.nvim_buf_get_name(0)
           if current_file == "" then
@@ -42,26 +45,55 @@ return {
 
           local has_snacks, snacks = pcall(require, "snacks")
           if has_snacks then
-            -- Searches only "STEP" in the current file using snacks.picker
+            -- Searching for the primary keyword "STEP" automatically matches "step" and "Step"
             snacks.picker.todo_comments({
-              keywords = { "STEP" },
+              keywords = {
+				"STEP",
+				"step",
+				"Step"
+			},
               dirs = { current_file },
             })
           else
             local has_telescope, telescope = pcall(require, "telescope")
             if has_telescope then
-              -- Searches only "STEP" in the current file using Telescope
               telescope.extensions["todo-comments"].todo({
-                keywords = { "STEP" },
+                keywords = "STEP",
                 search_dirs = { current_file },
               })
             else
-              -- Fallback: uses the built-in location list for the current buffer
               vim.cmd("TodoLocList keywords=STEP")
             end
           end
         end,
         desc = "Find STEP comments in current file",
+      },
+
+      -- 3. Find only STEP comments in the CWD (<leader>sF)
+      {
+        "<leader>sF",
+        function()
+          local cwd = vim.fn.getcwd()
+
+          local has_snacks, snacks = pcall(require, "snacks")
+          if has_snacks then
+            snacks.picker.todo_comments({
+              keywords = { "STEP" },
+              dirs = { cwd },
+            })
+          else
+            local has_telescope, telescope = pcall(require, "telescope")
+            if has_telescope then
+              telescope.extensions["todo-comments"].todo({
+                keywords = "STEP",
+                cwd = cwd,
+              })
+            else
+              vim.cmd("TodoQuickFix keywords=STEP")
+            end
+          end
+        end,
+        desc = "Find STEP comments in CWD",
       },
     },
   },
