@@ -1,8 +1,13 @@
+cursor-style-blink = true
+adjust-cursor-thickness = 3
+cursor-style = bar
+shell-integration-features = no-cursor
 
 # ==============================================================================
 # Font Configuration (FiraCode Nerd Font Mono)
 # ==============================================================================
-font-family = "FiraCode Nerd Font Mono"
+font-family = "FiraCode Nerd Font"
+font-synthetic-style = true
 font-size = 15
 
 # All HarfBuzz/OpenType character variants & stylistic sets from your WezTerm config
@@ -31,7 +36,7 @@ window-padding-balance = false
 
 # Matches startup fullscreen
 # fullscreen = true
-maximize = false
+maximize = true
 
 # Matches `window_close_confirmation = "NeverPrompt"`
 confirm-close-surface = false
@@ -47,6 +52,7 @@ background-blur = true
 # background-image = "/path/to/your/image.png"
 # background-image-fit = cover
 background-image-opacity = 0.93
+custom-shader-animation = always
 custom-shader = ~/.config/nvim/other_config/terminal_effects_powershell/cursor_lightning.glsl
 custom-shader = ~/.config/nvim/other_config/terminal_effects_powershell/ingame-crt-cursor.glsl
 custom-shader = ~/.config/nvim/other_config/terminal_effects_powershell/windows-terminal-shader-ghostty.glsl
