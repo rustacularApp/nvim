@@ -39,7 +39,7 @@
   "quicker.nvim": { "branch": "master", "commit": "4a6883cb13fe097a20a046eb55f6dffd239276e3" },
   "rust-import.nvim": { "branch": "master", "commit": "221a46edc1954319a0585cb486725bd5dd9be03b" },
   "rustaceanvim": { "branch": "main", "commit": "a968f5133b8b24f481de12f08cd79420d1ace559" },
-  "smear-cursor.nvim": { "branch": "main", "commit": "079eac7f2dc68ed041a71265277d5c190b91dc99" },
+  "smear-cursor.nvim": { "branch": "main", "commit": "f63ff221158b5b0ca9de1d7d1ff2e0dce5649614" },
   "snacks.nvim": { "branch": "main", "commit": "882c996cf28183f4d63640de0b4c02ec886d01f2" },
   "speedtyper.nvim": { "branch": "v2", "commit": "231bec830463bf8157ee1cfb42a4d7ce12334354" },
   "sqlite.lua": { "branch": "master", "commit": "50092d60feb242602d7578398c6eb53b4a8ffe7b" },
