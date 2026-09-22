@@ -140,22 +140,25 @@ return {
 							-- 2. Boost the score based on your search query
 							local query = (ctx.filter.search or ""):lower()
 							if query ~= "" then
-								local text = (item.text or ""):lower()
-								local s, _ = text:find(query, 1, true) -- plain text substring search
+								local name = (item.name or item.text or ""):lower()
+								local s, _ = name:find(query, 1, true)
 
 								if s == 1 then
-									-- Starts with query (e.g. "seed_placeholder_articles") -> HIGHEST SCORE
-									item.score = 1000 - #text
+									-- Starts with query (e.g. "seed_admin") -> HIGHEST SCORE (~980)
+									item.score = 1000 - #name
 								elseif s then
-									-- Contains query anywhere (substring match) -> HIGH SCORE
-									item.score = 500 - #text
+									-- Contains query anywhere as a substring -> HIGH SCORE (~480)
+									item.score = 500 - #name
 								else
-									-- Loose rust-analyzer fuzzy match (e.g. "SetWebsocketSenderMap", "sealed") -> LOW SCORE
+									-- Loose fuzzy match (e.g. "SetWebsocketSenderMap", "sealed") -> LOW SCORE (10)
 									item.score = 10
-									-- TIP: If you want to outright HIDE things like SetWebsocketSenderMap:
-									-- return false
+
+									-- OPTIONAL: If you NEVER want to see loose fuzzy matches like SetWebsocketSenderMap,
+									-- uncomment the line below to discard them completely:
+									return false
 								end
 							end
+
 							return item
 						end,
 					},
