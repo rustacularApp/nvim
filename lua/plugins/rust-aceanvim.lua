@@ -14,6 +14,16 @@ return {
 					},
 					settings = {
 						['rust-analyzer'] = {
+							workspace = {
+								symbol = {
+									search = {
+										kind = "all_symbols",
+										scope = "workspace",
+										excludeImports = true,
+										limit = 256
+									}
+								}
+							},
 							cachePriming = { enable = false },
 							procMacro = {
 								enable = true,

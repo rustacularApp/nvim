@@ -121,6 +121,44 @@ return {
 					},
 				},
 				sources = {
+					lsp_workspace_symbols = {
+						transform = function(item, ctx)
+							if not item.file then
+								return item
+							end
+
+							-- 1. Discard external crates, rustup stdlib, and paths outside cwd
+							if item.file:match("%.cargo") or item.file:match("%.rustup") or item.file:match("rustc") then
+								return false
+							end
+							local cwd = vim.fs.normalize(vim.uv.cwd() or vim.fn.getcwd())
+							local file = vim.fs.normalize(item.file)
+							if (file:sub(1, 1) == "/" or file:match("^%a:")) and not vim.startswith(file, cwd) then
+								return false
+							end
+
+							-- 2. Boost the score based on your search query
+							local query = (ctx.filter.search or ""):lower()
+							if query ~= "" then
+								local text = (item.text or ""):lower()
+								local s, _ = text:find(query, 1, true) -- plain text substring search
+
+								if s == 1 then
+									-- Starts with query (e.g. "seed_placeholder_articles") -> HIGHEST SCORE
+									item.score = 1000 - #text
+								elseif s then
+									-- Contains query anywhere (substring match) -> HIGH SCORE
+									item.score = 500 - #text
+								else
+									-- Loose rust-analyzer fuzzy match (e.g. "SetWebsocketSenderMap", "sealed") -> LOW SCORE
+									item.score = 10
+									-- TIP: If you want to outright HIDE things like SetWebsocketSenderMap:
+									-- return false
+								end
+							end
+							return item
+						end,
+					},
 					files = {
 						hidden = true,
 					},
