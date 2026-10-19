@@ -162,6 +162,15 @@ return {
 							return item
 						end,
 					},
+					marks = {
+						transform = function (item)
+							local mark = (item.label or item.text or ""):gsub("^'",""):sub(1, 1)
+							if mark:match("%a") then
+								return item
+							end
+							return false
+						end,
+					},
 					files = {
 						hidden = true,
 					},
