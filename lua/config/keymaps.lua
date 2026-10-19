@@ -797,3 +797,31 @@ vim.keymap.set("n", "<leader>kv", function()
     env = { READONLY_MODE = "1" } -- This triggers your awesome autocmd!
   })
 end, { desc = "Open current file in strict read-only Ghostty at cursor position" })
+
+
+-- Command to delete all custom marks (a-z and A-Z) across all buffers
+vim.api.nvim_create_user_command("ClearMarks", function()
+  -- 1. Delete all global uppercase marks (A-Z)
+  for i = string.byte("A"), string.byte("Z") do
+    pcall(vim.api.nvim_del_mark, string.char(i))
+  end
+
+  -- 2. Delete all buffer-local lowercase marks (a-z) in active buffers
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(buf) then
+      for i = string.byte("a"), string.byte("z") do
+        pcall(vim.api.nvim_buf_del_mark, buf, string.char(i))
+      end
+    end
+  end
+
+  -- 3. Force overwrite the ShaDa file so marks don't return on next restart
+pcall(function()
+  vim.cmd("wshada!")
+end)
+
+  vim.notify("All custom marks (a-z, A-Z) cleared!", vim.log.levels.INFO)
+end, { desc = "Clear all custom marks and update ShaDa" })
+
+-- Optional: map it to a shortcut
+vim.keymap.set("n", "<leader>mD", "<cmd>ClearMarks<CR>", { desc = "Delete all custom marks" })
