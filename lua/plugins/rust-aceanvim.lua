@@ -2,55 +2,62 @@ return {
 	{
 		"mrcjkb/rustaceanvim",
 		ft = { "rust" },
-		init = function()
+		init = function ()
 			vim.g.rustaceanvim = {
 				server = {
-					on_attach = function(client, bufnr)
+					on_attach = function (client, bufnr)
 						client.server_capabilities.semanticTokensProvider = nil
 					end,
-					default_settings = {
-						["rust-analyzer"] = {
+					extraEnv = {
+						CARGO_TARGET_DIR = "target/rust-analyzer",
+						CARGO_BUILD_JOBS = "8"
+					},
+					settings = {
+						['rust-analyzer'] = {
 							workspace = {
 								symbol = {
 									search = {
 										kind = "all_symbols",
 										scope = "workspace",
-										limit = 256,
-									},
-								},
+										excludeImports = true,
+										limit = 256
+									}
+								}
 							},
-							cachePriming = { enable = true },
+							cachePriming = { enable = false },
 							procMacro = {
 								enable = true,
 								ignored = {
 									["napi-derive"] = { "napi" },
-									["async-trait"] = { "async_trait" },
 								},
 							},
 							inlayHints = {
-								enable = false,
 								chainingHints = { enable = false },
-								typeHints = { enable = false },
-								parameterHints = { enable = false },
-								renderColons = false,
+								typeHints = { enable = true },
+								parameterHints = { enable = true },
+								renderColons = true
 							},
 							completion = {
 								callable = { snippets = "add_parentheses" },
-								fullFunctionSignatures = { enable = false },
-								autoimport = { enable = true },
+                                fullFunctionSignatures = { enable = false },
+                                autoimport = { enable = true },
 								postfix = { enable = false },
-								termSearch = { enable = false },
+							},
+							imports = {
+								granularity = { group = "module" },
+								prefix = "self"
+							},
+							diagnostics = {
+								enable = true,
+								disabled = { "unresolved-proc-macro" },
 							},
 							cargo = {
 								allFeatures = true,
 								loadOutDirsFromCheck = true,
-								buildScripts = {
-									enable = true,
-									rebuildOnSave = false,
-								},
+								buildScripts = { enable = true },
 							},
 							checkOnSave = {
-								command = "check",
+								command = "clippy",
 								extraArgs = { "--no-deps" },
 							},
 							files = {
@@ -61,14 +68,14 @@ return {
 									"build",
 									"target",
 									"node_modules",
-									".git",
-								},
-							},
+									".git"
+								}
+							}
 						},
 					},
 				},
 			}
-		end,
+		end
 	},
 	{
 		"statiolake/rust-import.nvim",
@@ -81,8 +88,8 @@ return {
 			{
 				"<leader>cb",
 				"<cmd>RustOrganizeImports<cr>",
-				desc = "Source Action (Clean & Organize Imports)",
-			},
-		},
-	},
+				desc = "Source Action (Clean & Organize Imports)"
+			}
+		}
+	}
 }
