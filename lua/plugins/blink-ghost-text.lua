@@ -9,11 +9,6 @@ return {
 				["<C-Space>"] = { "show", "show_documentation", "hide_documentation" },
 			},
 			completion = {
-				documentation = {
-					auto_show = true,
-					-- Wait 250ms before asking rust-analyzer for doc comments so fast typing never lags
-					auto_show_delay_ms = 250,
-				},
 				ghost_text = { enabled = false },
 				list = {
 					max_items = 20,
