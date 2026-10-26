@@ -2,29 +2,28 @@ return {
 	{
 		"mrcjkb/rustaceanvim",
 		ft = { "rust" },
-		init = function ()
+		dependencies = { "saghen/blink.cmp" },
+		init = function()
 			vim.g.rustaceanvim = {
 				server = {
-					on_attach = function (client, bufnr)
+					-- 1. Injects blink capabilities so lazy-resolution works
+					capabilities = require("blink.cmp").get_lsp_capabilities(),
+					on_attach = function(client, bufnr)
 						client.server_capabilities.semanticTokensProvider = nil
 					end,
-					extraEnv = {
-						CARGO_TARGET_DIR = "target/rust-analyzer",
-						CARGO_BUILD_JOBS = "2"
-					},
-					settings = {
-						['rust-analyzer'] = {
+					default_settings = {
+						["rust-analyzer"] = {
 							workspace = {
 								symbol = {
 									search = {
 										kind = "all_symbols",
-										scope = "workspace",
-										excludeImports = true,
-										limit = 256
-									}
-								}
+										scope = "workspace_and_dependencies",
+										excludeImports = false,
+										limit = 256,
+									},
+								},
 							},
-							cachePriming = { enable = false },
+							cachePriming = { enable = true },
 							procMacro = {
 								enable = true,
 								ignored = {
@@ -35,24 +34,25 @@ return {
 								chainingHints = { enable = false },
 								typeHints = { enable = true },
 								parameterHints = { enable = true },
-								renderColons = true
+								renderColons = true,
 							},
 							completion = {
 								callable = { snippets = "add_parentheses" },
-                                fullFunctionSignatures = { enable = false },
-                                autoimport = { enable = true },
+								fullFunctionSignatures = { enable = false },
+								autoimport = { enable = true },
 								postfix = { enable = false },
 							},
 							imports = {
 								granularity = { group = "module" },
-								prefix = "self"
+								prefix = "self",
 							},
 							diagnostics = {
 								enable = true,
 								disabled = { "unresolved-proc-macro" },
 							},
 							cargo = {
-								allFeatures = true,
+								allFeatures = false, -- DISABLED: massive speedup on sea_query/deps
+								targetDir = true,     -- properly isolates cache to target/rust-analyzer
 								loadOutDirsFromCheck = true,
 								buildScripts = { enable = true },
 							},
@@ -68,14 +68,14 @@ return {
 									"build",
 									"target",
 									"node_modules",
-									".git"
-								}
-							}
+									".git",
+								},
+							},
 						},
 					},
 				},
 			}
-		end
+		end,
 	},
 	{
 		"statiolake/rust-import.nvim",
@@ -88,8 +88,8 @@ return {
 			{
 				"<leader>cb",
 				"<cmd>RustOrganizeImports<cr>",
-				desc = "Source Action (Clean & Organize Imports)"
-			}
-		}
-	}
+				desc = "Source Action (Clean & Organize Imports)",
+			},
+		},
+	},
 }
