@@ -5,7 +5,7 @@ return {
 			completion = {
 				ghost_text = { enabled = false },
 				list = {
-					max_items = 15,
+					max_items = 20,
 					selection = {
 						preselect = true,
 						auto_insert = true
