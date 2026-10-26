@@ -2,85 +2,84 @@ return {
 	{
 		"mrcjkb/rustaceanvim",
 		ft = { "rust" },
-		dependencies = { "saghen/blink.cmp" },
-		opts = function(_, opts)
-			opts.server = opts.server or {}
-
-			-- Injects blink capabilities
-			opts.server.capabilities = require("blink.cmp").get_lsp_capabilities(opts.server.capabilities)
-
-			opts.server.on_attach = function(client, bufnr)
-				client.server_capabilities.semanticTokensProvider = nil
-			end
-
-			opts.server.default_settings = {
-				["rust-analyzer"] = {
-					-- 1. Restrict symbol search back to workspace only
-					workspace = {
-						symbol = {
-							search = {
-								scope = "workspace",
-								kind = "only_types",
-								limit = 128,
+		init = function()
+			vim.g.rustaceanvim = {
+				server = {
+					on_attach = function(client, bufnr)
+						-- Keeps syntax highlighting snappy in huge files
+						client.server_capabilities.semanticTokensProvider = nil
+					end,
+					extraEnv = {
+						-- Isolates RA builds so it never locks your terminal cargo builds
+						CARGO_TARGET_DIR = "target/rust-analyzer",
+						-- Caps RA background CPU usage to 2 cores
+						CARGO_BUILD_JOBS = "2",
+					},
+					default_settings = {
+						["rust-analyzer"] = {
+							workspace = {
+								symbol = {
+									search = {
+										kind = "all_symbols",
+										scope = "workspace",
+										limit = 256,
+									},
+								},
 							},
-						},
-					},
-					-- 2. Turn OFF cache priming (stops background 100% CPU lockups)
-					cachePriming = { enable = false },
-					procMacro = {
-						enable = true,
-						ignored = {
-							["napi-derive"] = { "napi" },
-							["async-trait"] = { "async_trait" },
-						},
-					},
-					inlayHints = {
-						chainingHints = { enable = false },
-						typeHints = { enable = true },
-						parameterHints = { enable = true },
-						renderColons = true,
-					},
-					completion = {
-						callable = { snippets = "add_parentheses" },
-						fullFunctionSignatures = { enable = false },
-						-- 3. CRITICAL: Prevents rust-analyzer from checking every external
-						-- trait in sea_query/tokio when typing a period (.)
-						autoimport = { enable = false },
-						postfix = { enable = false },
-					},
-					imports = {
-						granularity = { group = "module" },
-						prefix = "self",
-					},
-					diagnostics = {
-						enable = true,
-						disabled = { "unresolved-proc-macro" },
-					},
-					cargo = {
-						allFeatures = false,
-						targetDir = false,
-						loadOutDirsFromCheck = true,
-						buildScripts = { enable = true },
-					},
-					checkOnSave = {
-						command = "clippy",
-						extraArgs = { "--no-deps" },
-					},
-					files = {
-						excludeDirs = {
-							".dart_tool",
-							".flutter-plugins",
-							".flutter-plugins-dependencies",
-							"build",
-							"target",
-							"node_modules",
-							".git",
+							-- Keep cache priming ON so completions are instant
+							cachePriming = { enable = true },
+							procMacro = {
+								enable = true,
+								ignored = {
+									["napi-derive"] = { "napi" },
+									["async-trait"] = { "async_trait" },
+								},
+							},
+							inlayHints = {
+								chainingHints = { enable = false },
+								typeHints = { enable = true },
+								parameterHints = { enable = true },
+								renderColons = true,
+							},
+							completion = {
+								callable = { snippets = "add_parentheses" },
+								fullFunctionSignatures = { enable = false },
+								-- REQUIRED for axum / sea_orm / struct suggestions
+								autoimport = { enable = true },
+								postfix = { enable = false },
+							},
+							imports = {
+								granularity = { group = "module" },
+								prefix = "self",
+							},
+							diagnostics = {
+								enable = true,
+								disabled = { "unresolved-proc-macro" },
+							},
+							cargo = {
+								allFeatures = true,
+								loadOutDirsFromCheck = true,
+								buildScripts = { enable = true },
+							},
+							checkOnSave = {
+								command = "clippy",
+								extraArgs = { "--no-deps" },
+							},
+							files = {
+								excludeDirs = {
+									".dart_tool",
+									".flutter-plugins",
+									".flutter-plugins-dependencies",
+									"build",
+									"target",
+									"node_modules",
+									".git",
+								},
+							},
 						},
 					},
 				},
 			}
-
-			return opts
 		end,
 	},
 	{
