@@ -242,3 +242,21 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
 -- end, { desc = "Reset Hover Pin Anchor" })
 --
 --
+
+
+-- Clamp multi-line diagnostic underlines to the first line only
+local orig_underline_show = vim.diagnostic.handlers.underline.show
+vim.diagnostic.handlers.underline.show = function(ns, bufnr, diagnostics, opts)
+  local clamped = {}
+  for _, diag in ipairs(diagnostics) do
+    local d = vim.deepcopy(diag)
+    -- If the diagnostic spans multiple lines, cap the underline to the start line
+    if d.end_lnum and d.end_lnum > d.lnum then
+      d.end_lnum = d.lnum
+      local line = vim.api.nvim_buf_get_lines(bufnr, d.lnum, d.lnum + 1, false)[1] or ""
+      d.end_col = #line
+    end
+    table.insert(clamped, d)
+  end
+  orig_underline_show(ns, bufnr, clamped, opts)
+end
