@@ -1001,3 +1001,80 @@ vim.keymap.set("n", "<leader>ra", function()
 
   vim.api.nvim_buf_set_lines(0, row, row + 1, false, new_lines)
 end, { desc = "Destructure variable to multiline tuple (.dissolve)" })
+
+
+
+
+
+
+
+-- ====================================================================
+-- Interactive Global Macro (:Gconfirm & <leader>gq)
+-- ====================================================================
+
+local function run_interactive_macro(line1, line2, pattern, reg)
+  reg = (reg and reg ~= "") and reg or "q"
+  local cmd = string.format(
+    "%d,%dg/%s/redraw | if confirm(getline('.'), \"&Yes\\n&No\") == 1 | exe \"norm @%s\" | endif",
+    line1,
+    line2,
+    pattern,
+    reg
+  )
+  vim.cmd(cmd)
+end
+
+-- 1. Custom Command: :'<,'>Gconfirm <pattern> [register]
+vim.api.nvim_create_user_command("Gconfirm", function(opts)
+  local raw_args = vim.trim(opts.args)
+  if raw_args == "" then
+    vim.notify("Usage: :Gconfirm <pattern> [register]", vim.log.levels.ERROR)
+    return
+  end
+
+  -- Checks if the last word is a single-letter register (e.g. :Gconfirm pattern a)
+  local pattern, reg = raw_args:match("^(.-)%s+(%a)$")
+  if not pattern then
+    pattern = raw_args
+    reg = "q"
+  end
+
+  run_interactive_macro(opts.line1, opts.line2, pattern, reg)
+end, {
+  range = "%", -- Defaults to whole file if no visual range selected
+  nargs = "+",
+  desc = "Run macro globally with confirmation",
+})
+
+-- 2. Visual / Normal Mode Keymap: <leader>gq (Uses LazyVim floating prompts)
+vim.keymap.set({ "n", "v" }, "<leader>rh", function()
+  local is_visual = vim.fn.mode():match("[vV\22]")
+  local line1, line2
+
+  if is_visual then
+    line1 = vim.fn.line("v")
+    line2 = vim.fn.line(".")
+    if line1 > line2 then line1, line2 = line2, line1 end
+    -- Exit visual mode
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", true)
+  else
+    line1 = 1
+    line2 = vim.fn.line("$")
+  end
+
+  -- Prompt 1: Pattern (pre-fills word under cursor)
+  vim.ui.input({
+    prompt = "Pattern to match: ",
+    default = vim.fn.expand("<cword>"),
+  }, function(pattern)
+    if not pattern or pattern == "" then return end
+
+    -- Prompt 2: Macro register (defaults to 'q')
+    vim.ui.input({
+      prompt = "Macro register (default 'q'): ",
+      default = "q",
+    }, function(reg)
+      run_interactive_macro(line1, line2, pattern, reg)
+    end)
+  end)
+end, { desc = "Interactive Global Macro" })
