@@ -828,178 +828,178 @@ vim.keymap.set("n", "<leader>mD", "<cmd>ClearMarks<CR>", { desc = "Delete all cu
 
 
 vim.keymap.set("n", "<leader>ra", function()
-  local cursor = vim.api.nvim_win_get_cursor(0)
-  local row = cursor[1] - 1
-  local col = cursor[2]
-  local line = vim.api.nvim_get_current_line()
+	local cursor = vim.api.nvim_win_get_cursor(0)
+	local row = cursor[1] - 1
+	local col = cursor[2]
+	local line = vim.api.nvim_get_current_line()
 
-  -- 1. Get active rust-analyzer LSP client
-  local get_clients = vim.lsp.get_clients
-  local clients = get_clients({ bufnr = 0, name = "rust-analyzer" })
-  local client = clients[1] or get_clients({ bufnr = 0 })[1]
-  if not client then
-    vim.notify("No active LSP client found for buffer", vim.log.levels.WARN)
-    return
-  end
-  local encoding = client.offset_encoding or "utf-16"
+	-- 1. Get active rust-analyzer LSP client
+	local get_clients = vim.lsp.get_clients
+	local clients = get_clients({ bufnr = 0, name = "rust-analyzer" })
+	local client = clients[1] or get_clients({ bufnr = 0 })[1]
+	if not client then
+		vim.notify("No active LSP client found for buffer", vim.log.levels.WARN)
+		return
+	end
+	local encoding = client.offset_encoding or "utf-16"
 
-  local function extract_location(res)
-    if not res then return nil end
-    if vim.islist(res) then
-      for _, item in ipairs(res) do
-        if item.uri or item.targetUri then return item end
-      end
-      return nil
-    end
-    if type(res) == "table" and (res.uri or res.targetUri) then
-      return res
-    end
-    return nil
-  end
+	local function extract_location(res)
+		if not res then return nil end
+		if vim.islist(res) then
+			for _, item in ipairs(res) do
+				if item.uri or item.targetUri then return item end
+			end
+			return nil
+		end
+		if type(res) == "table" and (res.uri or res.targetUri) then
+			return res
+		end
+		return nil
+	end
 
-  local function query_lsp(method, p)
-    local results = vim.lsp.buf_request_sync(0, method, p, 2000)
-    if not results then return nil end
-    for _, client_res in pairs(results) do
-      local loc = extract_location(client_res.result)
-      if loc then return loc end
-    end
-    return nil
-  end
+	local function query_lsp(method, p)
+		local results = vim.lsp.buf_request_sync(0, method, p, 2000)
+		if not results then return nil end
+		for _, client_res in pairs(results) do
+			local loc = extract_location(client_res.result)
+			if loc then return loc end
+		end
+		return nil
+	end
 
-  local location = nil
+	local location = nil
+	local cur_row = row + 1
+	local max_row = math.min(vim.api.nvim_buf_line_count(0), cur_row + 15)
 
-  -- 2. Priority: Scan the statement for Turbofish ::<CustomType> or : CustomType
-  local cur_row = row + 1
-  local max_row = math.min(vim.api.nvim_buf_line_count(0), cur_row + 15)
-  local ignored_types = { Result = true, Option = true, Some = true, Ok = true, Err = true, Vec = true, HashMap = true, Arc = true, Box = true }
+	-- 1. PRIORITY: If .dissolve() is present, find the variable right before it
+	for r = cur_row, max_row do
+		local l = vim.api.nvim_buf_get_lines(0, r - 1, r, false)[1] or ""
+		local dis_pos = l:find("%.dissolve%s*%(")
+		if dis_pos and dis_pos > 1 then
+			local prev_idx = l:sub(1, dis_pos - 1):match(".*()%S")
+			if prev_idx then
+				local dis_params = vim.lsp.util.make_position_params(0, encoding)
+				dis_params.position.line = r - 1
+				dis_params.position.character = prev_idx - 1
+				-- Query the type of `category_cursor`, which gives `ForYouArticlesCursor`!
+				location = query_lsp("textDocument/typeDefinition", dis_params)
+				if location then break end
+			end
+		end
+		if l:find(";") then break end
+	end
 
-  for r = cur_row, max_row do
-    local l = vim.api.nvim_buf_get_lines(0, r - 1, r, false)[1] or ""
-    -- Matches ::<ArticleStatsCacheMap or <ArticleStatsCacheMap or : ArticleStatsCacheMap
-    local type_name = l:match("::%s*<%s*([A-Z][%w_]*)")
-      or l:match("<%s*([A-Z][%w_]*)")
-      or l:match(":%s*([A-Z][%w_]*)")
+	-- 2. Priority: Scan the statement for Turbofish ::<CustomType> or : CustomType
+	if not location then
+		local ignored_types = { Result = true, Option = true, Some = true, Ok = true, Err = true, Vec = true, HashMap = true, Arc = true, Box = true }
 
-    if type_name and not ignored_types[type_name] then
-      local match_col = l:find(type_name, 1, true)
-      if match_col then
-        local type_params = vim.lsp.util.make_position_params(0, encoding)
-        type_params.position.line = r - 1
-        type_params.position.character = match_col - 1
-        location = query_lsp("textDocument/definition", type_params)
-        if location then break end
-      end
-    end
-    if l:find(";") then break end
-  end
+		for r = cur_row, max_row do
+			local l = vim.api.nvim_buf_get_lines(0, r - 1, r, false)[1] or ""
+			local type_name = l:match("::%s*<%s*([A-Z][%w_]*)")
+				or l:match("<%s*([A-Z][%w_]*)")
+				or l:match(":%s*([A-Z][%w_]*)")
 
-  -- 3. If no turbofish was found, query typeDefinition directly on the variable at cursor
-  if not location then
-    local params = vim.lsp.util.make_position_params(0, encoding)
-    location = query_lsp("textDocument/typeDefinition", params)
-  end
+			if type_name and not ignored_types[type_name] then
+				local match_col = l:find(type_name, 1, true)
+				if match_col then
+					local type_params = vim.lsp.util.make_position_params(0, encoding)
+					type_params.position.line = r - 1
+					type_params.position.character = match_col - 1
+					location = query_lsp("textDocument/definition", type_params)
+					if location then break end
+				end
+			end
+			if l:find(";") then break end
+		end
+	end
 
-  -- 4. If still nothing and .dissolve() is present, query right before .dissolve()
-  if not location then
-    for r = cur_row, max_row do
-      local l = vim.api.nvim_buf_get_lines(0, r - 1, r, false)[1] or ""
-      local dis_pos = l:find("%.dissolve%s*%(")
-      if dis_pos and dis_pos > 1 then
-        local prev_idx = l:sub(1, dis_pos - 1):match(".*()%S")
-        if prev_idx then
-          local dis_params = vim.lsp.util.make_position_params(0, encoding)
-          dis_params.position.line = r - 1
-          dis_params.position.character = prev_idx - 1
-          location = query_lsp("textDocument/typeDefinition", dis_params)
-          if location then break end
-        end
-      end
-      if l:find(";") then break end
-    end
-  end
+	-- 3. Fallback: Query typeDefinition directly on the variable at cursor
+	if not location then
+		local params = vim.lsp.util.make_position_params(0, encoding)
+		location = query_lsp("textDocument/typeDefinition", params)
+	end
 
-  if not location then
-    vim.notify("Could not find struct definition", vim.log.levels.WARN)
-    return
-  end
+	if not location then
+		vim.notify("Could not find struct definition", vim.log.levels.WARN)
+		return
+	end
 
-  -- 5. Read struct definition
-  local uri = location.targetUri or location.uri
-  local range = location.targetSelectionRange or location.targetRange or location.range
-  if not uri or not range then
-    vim.notify("Location missing URI or range", vim.log.levels.WARN)
-    return
-  end
+	-- 5. Read struct definition
+	local uri = location.targetUri or location.uri
+	local range = location.targetSelectionRange or location.targetRange or location.range
+	if not uri or not range then
+		vim.notify("Location missing URI or range", vim.log.levels.WARN)
+		return
+	end
 
-  local fname = vim.uri_to_fname(uri)
-  local bufnr = vim.fn.bufadd(fname)
-  vim.fn.bufload(bufnr)
-  local all_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+	local fname = vim.uri_to_fname(uri)
+	local bufnr = vim.fn.bufadd(fname)
+	vim.fn.bufload(bufnr)
+	local all_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
-  -- 6. Parse fields
-  local start_line = range.start.line
-  local fields = {}
-  local inside_struct = false
-  local depth = 0
+	-- 6. Parse fields
+	local start_line = range.start.line
+	local fields = {}
+	local inside_struct = false
+	local depth = 0
 
-  for i = start_line + 1, #all_lines do
-    local l = all_lines[i]
-    if not inside_struct then
-      if l:find("{") then
-        inside_struct = true
-        depth = depth + select(2, l:gsub("{", "")) - select(2, l:gsub("}", ""))
-      end
-    else
-      depth = depth + select(2, l:gsub("{", "")) - select(2, l:gsub("}", ""))
-      if depth <= 0 then break end
+	for i = start_line + 1, #all_lines do
+		local l = all_lines[i]
+		if not inside_struct then
+			if l:find("{") then
+				inside_struct = true
+				depth = depth + select(2, l:gsub("{", "")) - select(2, l:gsub("}", ""))
+			end
+		else
+			depth = depth + select(2, l:gsub("{", "")) - select(2, l:gsub("}", ""))
+			if depth <= 0 then break end
 
-      local clean = l:gsub("^%s*pub%b()%s*", ""):gsub("^%s*pub%s*", ""):gsub("^%s*", "")
-      local field = clean:match("^([%w_]+)%s*:")
-      if field and field ~= "pub" then
-        table.insert(fields, field)
-      end
-    end
-  end
+			local clean = l:gsub("^%s*pub%b()%s*", ""):gsub("^%s*pub%s*", ""):gsub("^%s*", "")
+			local field = clean:match("^([%w_]+)%s*:")
+			if field and field ~= "pub" then
+				table.insert(fields, field)
+			end
+		end
+	end
 
-  if #fields == 0 then
-    vim.notify("No fields found in struct definition", vim.log.levels.WARN)
-    return
-  end
+	if #fields == 0 then
+		vim.notify("No fields found in struct definition", vim.log.levels.WARN)
+		return
+	end
 
-  -- 7. Format replacement with indentation
-  local indent_len = vim.fn.indent(row + 1)
-  local base_indent = string.rep(" ", indent_len)
-  local shift = vim.bo.shiftwidth > 0 and vim.bo.shiftwidth or 4
-  local field_indent = base_indent .. string.rep(" ", shift)
+	-- 7. Format replacement with indentation
+	local indent_len = vim.fn.indent(row + 1)
+	local base_indent = string.rep(" ", indent_len)
+	local shift = vim.bo.shiftwidth > 0 and vim.bo.shiftwidth or 4
+	local field_indent = base_indent .. string.rep(" ", shift)
 
-  -- Replace whatever is between "let " and "="
-  local before, after
-  local let_start, let_end = line:find("let%s+")
-  local eq_pos = line:find("=", (let_end or 0) + 1)
+	-- Replace whatever is between "let " and "="
+	local before, after
+	local let_start, let_end = line:find("let%s+")
+	local eq_pos = line:find("=", (let_end or 0) + 1)
 
-  if let_end and eq_pos then
-    before = line:sub(1, let_end)
-    after = line:sub(eq_pos)
-  else
-    local left = line:sub(1, col + 1)
-    local start_idx = left:match(".*()[%s%p]")
-    start_idx = start_idx and (start_idx + 1) or 1
-    local right = line:sub(start_idx)
-    local word = right:match("^([%w_]+)") or ""
-    local end_idx = start_idx + #word - 1
-    before = line:sub(1, start_idx - 1)
-    after = line:sub(end_idx + 1)
-  end
+	if let_end and eq_pos then
+		before = line:sub(1, let_end)
+		after = line:sub(eq_pos)
+	else
+		local left = line:sub(1, col + 1)
+		local start_idx = left:match(".*()[%s%p]")
+		start_idx = start_idx and (start_idx + 1) or 1
+		local right = line:sub(start_idx)
+		local word = right:match("^([%w_]+)") or ""
+		local end_idx = start_idx + #word - 1
+		before = line:sub(1, start_idx - 1)
+		after = line:sub(end_idx + 1)
+	end
 
-  local new_lines = {}
-  table.insert(new_lines, before .. "(")
-  for _, f in ipairs(fields) do
-    table.insert(new_lines, field_indent .. f .. ",")
-  end
-  table.insert(new_lines, base_indent .. ") " .. after)
+	local new_lines = {}
+	table.insert(new_lines, before .. "(")
+	for _, f in ipairs(fields) do
+		table.insert(new_lines, field_indent .. f .. ",")
+	end
+	table.insert(new_lines, base_indent .. ") " .. after)
 
-  vim.api.nvim_buf_set_lines(0, row, row + 1, false, new_lines)
+	vim.api.nvim_buf_set_lines(0, row, row + 1, false, new_lines)
 end, { desc = "Destructure variable to multiline tuple (.dissolve)" })
 
 
@@ -1013,68 +1013,68 @@ end, { desc = "Destructure variable to multiline tuple (.dissolve)" })
 -- ====================================================================
 
 local function run_interactive_macro(line1, line2, pattern, reg)
-  reg = (reg and reg ~= "") and reg or "q"
-  local cmd = string.format(
-    "%d,%dg/%s/redraw | if confirm(getline('.'), \"&Yes\\n&No\") == 1 | exe \"norm @%s\" | endif",
-    line1,
-    line2,
-    pattern,
-    reg
-  )
-  vim.cmd(cmd)
+	reg = (reg and reg ~= "") and reg or "q"
+	local cmd = string.format(
+		"%d,%dg/%s/redraw | if confirm(getline('.'), \"&Yes\\n&No\") == 1 | exe \"norm @%s\" | endif",
+		line1,
+		line2,
+		pattern,
+		reg
+	)
+	vim.cmd(cmd)
 end
 
 -- 1. Custom Command: :'<,'>Gconfirm <pattern> [register]
 vim.api.nvim_create_user_command("Gconfirm", function(opts)
-  local raw_args = vim.trim(opts.args)
-  if raw_args == "" then
-    vim.notify("Usage: :Gconfirm <pattern> [register]", vim.log.levels.ERROR)
-    return
-  end
+	local raw_args = vim.trim(opts.args)
+	if raw_args == "" then
+		vim.notify("Usage: :Gconfirm <pattern> [register]", vim.log.levels.ERROR)
+		return
+	end
 
-  -- Checks if the last word is a single-letter register (e.g. :Gconfirm pattern a)
-  local pattern, reg = raw_args:match("^(.-)%s+(%a)$")
-  if not pattern then
-    pattern = raw_args
-    reg = "q"
-  end
+	-- Checks if the last word is a single-letter register (e.g. :Gconfirm pattern a)
+	local pattern, reg = raw_args:match("^(.-)%s+(%a)$")
+	if not pattern then
+		pattern = raw_args
+		reg = "q"
+	end
 
-  run_interactive_macro(opts.line1, opts.line2, pattern, reg)
+	run_interactive_macro(opts.line1, opts.line2, pattern, reg)
 end, {
-  range = "%", -- Defaults to whole file if no visual range selected
-  nargs = "+",
-  desc = "Run macro globally with confirmation",
-})
+		range = "%", -- Defaults to whole file if no visual range selected
+		nargs = "+",
+		desc = "Run macro globally with confirmation",
+	})
 
 -- 2. Visual / Normal Mode Keymap: <leader>gq (Uses LazyVim floating prompts)
 vim.keymap.set({ "n", "v" }, "<leader>rh", function()
-  local is_visual = vim.fn.mode():match("[vV\22]")
-  local line1, line2
+	local is_visual = vim.fn.mode():match("[vV\22]")
+	local line1, line2
 
-  if is_visual then
-    line1 = vim.fn.line("v")
-    line2 = vim.fn.line(".")
-    if line1 > line2 then line1, line2 = line2, line1 end
-    -- Exit visual mode
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", true)
-  else
-    line1 = 1
-    line2 = vim.fn.line("$")
-  end
+	if is_visual then
+		line1 = vim.fn.line("v")
+		line2 = vim.fn.line(".")
+		if line1 > line2 then line1, line2 = line2, line1 end
+		-- Exit visual mode
+		vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", true)
+	else
+		line1 = 1
+		line2 = vim.fn.line("$")
+	end
 
-  -- Prompt 1: Pattern (pre-fills word under cursor)
-  vim.ui.input({
-    prompt = "Pattern to match: ",
-    default = vim.fn.expand("<cword>"),
-  }, function(pattern)
-    if not pattern or pattern == "" then return end
+	-- Prompt 1: Pattern (pre-fills word under cursor)
+	vim.ui.input({
+		prompt = "Pattern to match: ",
+		default = vim.fn.expand("<cword>"),
+	}, function(pattern)
+			if not pattern or pattern == "" then return end
 
-    -- Prompt 2: Macro register (defaults to 'q')
-    vim.ui.input({
-      prompt = "Macro register (default 'q'): ",
-      default = "q",
-    }, function(reg)
-      run_interactive_macro(line1, line2, pattern, reg)
-    end)
-  end)
+			-- Prompt 2: Macro register (defaults to 'q')
+			vim.ui.input({
+				prompt = "Macro register (default 'q'): ",
+				default = "q",
+			}, function(reg)
+					run_interactive_macro(line1, line2, pattern, reg)
+				end)
+		end)
 end, { desc = "Interactive Global Macro" })
