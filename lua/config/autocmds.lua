@@ -260,3 +260,12 @@ vim.diagnostic.handlers.underline.show = function(ns, bufnr, diagnostics, opts)
   end
   orig_underline_show(ns, bufnr, clamped, opts)
 end
+
+
+
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "rust", -- or "*" to apply to all filetypes
+  callback = function()
+    vim.opt_local.textwidth = 150 -- or 0 to disable completely
+  end,
+})
