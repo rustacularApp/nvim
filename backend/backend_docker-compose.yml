@@ -1,0 +1,123 @@
+version: "3.9"
+
+services:
+  postgres_db:
+    image: postgres:18-alpine
+    container_name: postgres_main
+    environment:
+      POSTGRES_USER: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DATABASE}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USERNAME} -d ${POSTGRES_DATABASE}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+    - "127.0.0.1:5432:5432"
+    volumes:
+    - postgres_data:/var/lib/postgresql
+    networks:
+    - default
+    - coolify
+
+  pgbouncer:
+    image: edoburu/pgbouncer
+    container_name: pgbouncer
+    environment:
+      DB_HOST: postgres_db
+      DB_PORT: ${POSTGRES_PORT}
+      DB_USER: ${POSTGRES_USERNAME}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DATABASE}
+      AUTH_TYPE: scram-sha-256
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 1000
+      DEFAULT_POOL_SIZE: 20
+    ports:
+      - "127.0.0.1:6432:5432"
+    depends_on:
+      - postgres_db
+    networks:
+    - default
+    - coolify
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis_cache
+    restart: always
+    command: redis-server --save 60 1 --loglevel warning --requirepass "${REDIS_PASSWORD}"
+    ports:
+    - "127.0.0.1:6379:6379"
+    volumes:
+    - redis_data:/data
+    networks:
+    - default
+    - coolify
+
+
+  rust_backend:
+    image: ghcr.io/rustacularapp/rustacular-backend:latest
+    environment:
+      - ADMIN_EMAIL=$ADMIN_EMAIL
+      - ADMIN_NAME=$ADMIN_NAME
+      - ADMIN_PASSWORD=$ADMIN_PASSWORD
+      - APPLICATION_SCHEMA=$APPLICATION_SCHEMA
+      - APPLICATION_SHA256=$APPLICATION_SHA256
+      - APPLICATION_SHA256_DEV=$APPLICATION_SHA256_DEV
+      - BASE_NATIVE_URL=$BASE_NATIVE_URL
+      - BASE_WEB_URL=$BASE_WEB_URL
+      - DEVELOPMENT_ANDROID_ORIGIN_KEY_HASH=$DEVELOPMENT_ANDROID_ORIGIN_KEY_HASH
+      - DEVELOPMENT_ANDROID_ORIGIN_KEY_HASH_CLIENT=$DEVELOPMENT_ANDROID_ORIGIN_KEY_HASH_CLIENT
+      - DEVELOPMENT_ANDROID_ORIGIN_KEY_HASH_CLIENT_NEW=$DEVELOPMENT_ANDROID_ORIGIN_KEY_HASH_CLIENT_NEW
+      - DEVELOPMENT_ANDROID_ORIGIN_KEY_HASH_DEV=$DEVELOPMENT_ANDROID_ORIGIN_KEY_HASH_DEV
+      - FIREBASE_CLIENT_EMAIL=$FIREBASE_CLIENT_EMAIL
+      - FIREBASE_ENCODING_PRIVATE_KEY=$FIREBASE_ENCODING_PRIVATE_KEY
+      - FIREBASE_GRANT_TYPE=$FIREBASE_GRANT_TYPE
+      - FIREBASE_POST_URI=$FIREBASE_POST_URI
+      - FIREBASE_SCOPE=$FIREBASE_SCOPE
+      - FIREBASE_TOKEN_EXPIRY=$FIREBASE_TOKEN_EXPIRY
+      - FIREBASE_TOKEN_URI=$FIREBASE_TOKEN_URI
+      - GOOGLE_OAUTH_ANDROID_CLIENT_ID=$GOOGLE_OAUTH_ANDROID_CLIENT_ID
+      - GOOGLE_OAUTH_AUTH_URL=$GOOGLE_OAUTH_AUTH_URL
+      - GOOGLE_OAUTH_CERTS=$GOOGLE_OAUTH_CERTS
+      - GOOGLE_OAUTH_CLIENT_SECRET=$GOOGLE_OAUTH_CLIENT_SECRET
+      - GOOGLE_OAUTH_REDIRECT_URL=$GOOGLE_OAUTH_REDIRECT_URL
+      - GOOGLE_OAUTH_TOKEN_REDIRECT_URL=$GOOGLE_OAUTH_TOKEN_REDIRECT_URL
+      - GOOGLE_OAUTH_TOKEN_URL=$GOOGLE_OAUTH_TOKEN_URL
+      - GOOGLE_OAUTH_WEB_CLIENT_ID=$GOOGLE_OAUTH_WEB_CLIENT_ID
+      - JWT_SECRET=$JWT_SECRET
+      - OAUTH_JWT_EXPIRATION_DURATION_IN_HOURS=$OAUTH_JWT_EXPIRATION_DURATION_IN_HOURS
+      - OAUTH_REFRESH_JWT_EXPIRATION_DURATION_IN_DAYS=$OAUTH_REFRESH_JWT_EXPIRATION_DURATION_IN_DAYS
+      - POSTGRES_DATABASE=$POSTGRES_DATABASE
+      - POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+      - POSTGRES_PORT=$POSTGRES_PORT
+      - POSTGRES_USERNAME=$POSTGRES_USERNAME
+      - REDIS_PASSWORD=$REDIS_PASSWORD
+      - REDIS_HOST=$REDIS_HOST
+      - REDIS_PORT=$REDIS_PORT
+      - RUST_LOG=$RUST_LOG
+      - RP_ID=$RP_ID
+      - IS_VPS=$IS_VPS
+      - RP_ORIGIN=$RP_ORIGIN
+      - SMTP_EMAIL=$SMTP_EMAIL
+      - SMTP_PASSWORD=$SMTP_PASSWORD
+      - SMTP_PROVIDER=$SMTP_PROVIDER
+    container_name: rust_api
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - pgbouncer
+      - redis
+    links:
+      - pgbouncer
+      - redis
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  coolify:
+    external: true

@@ -1,0 +1,21 @@
+FROM rust:1.96-slim AS builder
+
+WORKDIR /usr/src/app
+
+RUN apt-get update && apt-get install -y pkg-config libssl-dev perl make gcc && rm -rf /var/lib/apt/lists/*
+
+COPY backend ./backend
+
+WORKDIR /usr/src/app/backend
+
+RUN cargo build --release
+
+FROM ubuntu:24.04
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install  -y libssl3 ca-certificates curl && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /usr/src/app/backend/target/release/backend ./
+
+CMD [ "./backend" ]
